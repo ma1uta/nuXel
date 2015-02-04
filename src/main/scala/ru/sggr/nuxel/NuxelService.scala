@@ -53,8 +53,8 @@ abstract class NuxelService private {
       row <- 0 until sheet.getRows
     } yield new Bean {
         override val name: String = cellContent(row, Columns.Name.id)
-        override val oe: String = cellContent(row, Columns.Sequence.id)
-        override val sequence: String = cellContent(row, Columns.OE.id)
+        override val oe: String = cellContent(row, Columns.OE.id)
+        override val sequence: String = cellContent(row, Columns.Sequence.id)
       }) tail
 
   }
