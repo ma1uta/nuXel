@@ -20,8 +20,12 @@ class NuxelServiceTest extends FunSuite{
     })
   }
 
-  test("simple validator logic check") {
+  /*test("simple validator logic check") {
     ???
-  }
+  }*/
+
+ test("Testing xslx parsing") {
+   NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("modernFile.xlsx") ).extractBeans
+    }
 
 }

@@ -3,7 +3,11 @@ package ru.sggr.nuxel
 import java.io.InputStream
 import java.util.List
 
-import jxl.Workbook
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
+
+import org.apache.poi.hssf.usermodel.HSSFSheet
+import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.WorkbookFactory
 
 import scala.collection.JavaConversions.{seqAsJavaList, asScalaBuffer}
 
@@ -19,7 +23,7 @@ abstract class NuxelService private {
   }
 
   def extractBeans: List[Bean] = {
-    validateBeans(getBeans(Workbook.getWorkbook(is)))
+    validateBeans(getBeans(is))
   }
 
   protected var validators: scala.List[BeanValidator]
@@ -44,19 +48,24 @@ abstract class NuxelService private {
       beans
 
 
-  private def getBeans(workbook: Workbook): List[Bean] = {
-    val sheet = workbook.getSheet(0)
+  private def getBeans(is: InputStream): List[Bean] = {
+    
+    val sheet = WorkbookFactory.create(is).getSheetAt(0)
+    
+    def cellContent(x: Int, n: Int) = {
+        sheet.getRow(n).getCell(x).getCellType match {
+            case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n).getCell(x).getNumericCellValue().toString
+            case Cell.CELL_TYPE_STRING => sheet.getRow(n).getCell(x).getStringCellValue()
+        }
+    }
 
-    def cellContent(x: Int, n: Int) =
-      sheet.getRow(x)(n).getContents
     (for {
-      row <- 0 until sheet.getRows
+    row <- 0 until sheet.getPhysicalNumberOfRows 
     } yield new Bean {
-        override val name: String = cellContent(row, Columns.Name.id)
-        override val oe: String = cellContent(row, Columns.OE.id)
-        override val sequence: String = cellContent(row, Columns.Sequence.id)
-      }) tail
-
+        override val name: String = cellContent(Columns.Name.id, row)
+        override val oe: String = cellContent(Columns.OE.id, row)             
+        override val sequence: String = cellContent(Columns.Sequence.id, row) 
+    }) tail
   }
 
   private object Columns extends Enumeration {
