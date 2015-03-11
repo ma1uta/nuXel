@@ -1,5 +1,7 @@
 name := "nuXel"
 
+organization := "ru.sggr"
+
 version := "1.1"
 
 scalaVersion := "2.11.5"
@@ -13,3 +15,15 @@ libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 libraryDependencies += "org.apache.poi" % "poi" % "3.11"
 
 libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.11"
+
+publishMavenStyle := true
+
+resolvers += "Sonatype OSS Snapshots" at "http://maven:8081/nexus/content/repositories/snapshots"
+
+resolvers += "Sonatype OSS Snapshots" at "http://maven:8081/nexus/content/repositories/releases"
+
+publishTo := Some("release" at "http://maven:8081/nexus/content/repositories/releases/")
+
+credentials += Credentials("Sonatype Nexus Repository Manager","maven",
+                           "deployment",
+                           "sg-gr")

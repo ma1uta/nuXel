@@ -27,5 +27,12 @@ class NuxelServiceTest extends FunSuite{
  test("Testing xslx parsing") {
    NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("modernFile.xlsx") ).extractBeans
     }
+    
+ test("Test for out of bound issue") {
+    assert(NuxelService.
+        getInstance(getClass.getClassLoader.getResourceAsStream("outofbound.xls") ).
+        extractBeans.size == 4)
+
+ }
 
 }

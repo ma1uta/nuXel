@@ -53,9 +53,14 @@ abstract class NuxelService private {
     val sheet = WorkbookFactory.create(is).getSheetAt(0)
     
     def cellContent(x: Int, n: Int) = {
-        sheet.getRow(n).getCell(x).getCellType match {
-            case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n).getCell(x).getNumericCellValue().toString
-            case Cell.CELL_TYPE_STRING => sheet.getRow(n).getCell(x).getStringCellValue()
+        if (sheet.getRow(n).getCell(x) != null){
+            sheet.getRow(n).getCell(x).getCellType match {
+                case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n).getCell(x).getNumericCellValue().toString
+                case Cell.CELL_TYPE_STRING => sheet.getRow(n).getCell(x).getStringCellValue()
+                case _ => ""
+            }
+        } else {
+        ""
         }
     }
 
@@ -65,7 +70,7 @@ abstract class NuxelService private {
         override val name: String = cellContent(Columns.Name.id, row)
         override val oe: String = cellContent(Columns.OE.id, row)             
         override val sequence: String = cellContent(Columns.Sequence.id, row) 
-    }) tail
+    }).tail.filter ( x => !x.name.isEmpty && !x.oe.isEmpty && !x.sequence.isEmpty)
   }
 
   private object Columns extends Enumeration {
