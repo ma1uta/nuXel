@@ -35,4 +35,23 @@ class NuxelServiceTest extends FunSuite{
 
  }
 
+ test("Not aligned data in sheet") {
+   assert(NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("notaligned.xls") ).
+        extractBeans.size == 4)
+    println((NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("notaligned.xls") ).
+        extractBeans))
+ }
+
+ test("Not aligned data in sheet... from alex") {
+   assert(NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("notaligned_one_more.xls") ).
+        extractBeans.size == 3)
+    println((NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("notaligned_one_more.xls") ).
+        extractBeans))
+ }
+
+ test("Complex file from customer with lots of unrelated data") {
+   assert(NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("customer_sample.xlsx")).extractBeans.size == 2)
+ }
+
+
 }

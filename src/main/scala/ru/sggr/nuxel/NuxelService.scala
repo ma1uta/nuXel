@@ -8,6 +8,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.hssf.usermodel.HSSFSheet
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.util.CellRangeAddress
 
 import scala.collection.JavaConversions.{seqAsJavaList, asScalaBuffer}
 
@@ -17,67 +18,96 @@ import scala.collection.JavaConversions.{seqAsJavaList, asScalaBuffer}
  */
 abstract class NuxelService private {
   /*Nah, i should rewrite this block... input stream could be trashed here =P */
-  def addValidator(validator: BeanValidator): NuxelService = {
-    validators = validator :: validators
-    this
-  }
+ def addValidator(validator: BeanValidator): NuxelService = {
+   validators = validator :: validators
+   this
+ }
 
-  def extractBeans: List[Bean] = {
-    validateBeans(getBeans(is))
-  }
+ def extractBeans: List[Bean] = {
+   validateBeans(getBeans(is))
+ }
 
-  protected var validators: scala.List[BeanValidator]
+ protected var validators: scala.List[BeanValidator]
 
-  protected val is: InputStream //input stream
+ protected val is: InputStream //input stream
 
-  private def validateBeans(beans: List[Bean]): List[Bean] =
-    if (validators.size > 0)
-      for {
-        validator <- validators
-        bean: Bean <- beans
-      } yield if (validator.validate(bean).isEmpty) new Bean {
-        override def oe = bean.oe
+ private def validateBeans(beans: List[Bean]): List[Bean] =
+   if (validators.size > 0)
+     for {
+       validator <- validators
+       bean: Bean <- beans
+       } yield if (validator.validate(bean).isEmpty) new Bean {
+         override def oe = bean.oe
 
-        override def name = bean.name
+         override def name = bean.name
 
-        override def sequence = bean.sequence
+         override def sequence = bean.sequence
 
-        override def errors = validator.validate(bean) :: bean.errors
-      } else bean
-    else
-      beans
+         override def errors = validator.validate(bean) :: bean.errors
+       } else bean
+     else
+       beans
 
 
-  private def getBeans(is: InputStream): List[Bean] = {
-    
-    val sheet = WorkbookFactory.create(is).getSheetAt(0)
-    
-    def cellContent(x: Int, n: Int) = {
-        if (sheet.getRow(n).getCell(x) != null){
-            sheet.getRow(n).getCell(x).getCellType match {
-                case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n).getCell(x).getNumericCellValue().toString
-                case Cell.CELL_TYPE_STRING => sheet.getRow(n).getCell(x).getStringCellValue()
-                case _ => ""
-            }
-        } else {
-        ""
-        }
-    }
+     private def getBeans(is: InputStream): List[Bean] = {
 
-    (for {
-    row <- 0 until sheet.getPhysicalNumberOfRows 
-    } yield new Bean {
-        override val name: String = cellContent(Columns.Name.id, row)
-        override val oe: String = cellContent(Columns.OE.id, row)             
-        override val sequence: String = cellContent(Columns.Sequence.id, row) 
-    }).tail.filter ( x => !x.name.isEmpty && !x.oe.isEmpty && !x.sequence.isEmpty)
-  }
+       val sheet = WorkbookFactory.create(is).getSheetAt(0)
 
-  private object Columns extends Enumeration {
-    //request column format
-    type Columns = Value
-    val Num, Name, Sequence, Steps, OE = Value
-  }
+       def cellContent(x: Int, n: Int, offset: (Int,Int) = (0,0)) = {
+         def transformToPhys(x: Int, y: Int) = {
+           val result = sheet.getMergedRegions().filter(region =>  
+               region.getFirstRow < y && region.getFirstColumn< x &&
+               region.getLastRow >= y && region.getLastColumn >= x ) map { 
+                 ( region : CellRangeAddress) => 
+                   (region.getLastColumn-x+region.getFirstColumn+1, region.getLastRow-y+region.getFirstRow+1)
+               }
+               if (!result.isEmpty) result (0) else (x,y)
+         }
+
+         ((x : Int, n: Int) => {
+           if (sheet.getRow(n+offset._2)!=null && sheet.getRow(n+offset._2).getCell(x+offset._1) != null){
+             sheet.getRow(n+offset._2).getCell(x+offset._1).getCellType match {
+               case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n+offset._2).getCell(x+offset._1).getNumericCellValue().toString
+               case Cell.CELL_TYPE_STRING => sheet.getRow(n+offset._2).getCell(x+offset._1).getStringCellValue()
+               case _ => ""
+             }
+             } else {
+               ""
+             }
+         }).tupled(transformToPhys(x,n))
+       }
+
+       val offset = (for {
+         rowNum <- 0 until sheet.getLastRowNum
+         colNum <- 0 until { 
+           if (sheet.getRow(rowNum) != null) 
+             sheet.getRow(rowNum).getLastCellNum
+           else 
+             0
+         }
+         if (cellContent(colNum,rowNum).contains("№")
+           && cellContent(colNum+1,rowNum).contains("Название")
+         && cellContent(colNum+2,rowNum).contains("последовательность")
+      && cellContent(colNum+3,rowNum).contains("шагов")
+       //&& cellContent(colNum+4,rowNum).contains("ОЕ")
+       )
+       } yield (colNum,rowNum)).head
+
+
+       (for {
+         row <- 0 until sheet.getPhysicalNumberOfRows 
+         } yield new Bean {
+           override val name: String = cellContent(Columns.Name.id, row, offset)
+           override val oe: String = cellContent(Columns.OE.id, row, offset)             
+           override val sequence: String = cellContent(Columns.Sequence.id, row, offset) 
+         }).tail.filter ( x => !x.name.isEmpty && !x.oe.isEmpty && !x.sequence.isEmpty)
+     }
+
+     private object Columns extends Enumeration {
+       //request column format
+       type Columns = Value
+       val Num, Name, Sequence, Steps, OE = Value
+     }
 
 }
 

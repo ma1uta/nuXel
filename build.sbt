@@ -2,7 +2,7 @@ name := "nuXel"
 
 organization := "ru.sggr"
 
-version := "1.1"
+version := "1.4"
 
 scalaVersion := "2.11.5"
 
@@ -12,9 +12,9 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test
 
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 
-libraryDependencies += "org.apache.poi" % "poi" % "3.11"
+libraryDependencies += "org.apache.poi" % "poi" % "3.14"
 
-libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.11"
+libraryDependencies += "org.apache.poi" % "poi-ooxml" % "3.14"
 
 publishMavenStyle := true
 

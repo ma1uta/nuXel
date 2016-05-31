@@ -8,4 +8,6 @@ trait Bean {
   def sequence: String
   def oe: String
   def errors : List[String] = List[String]()
+  override def toString : String =  name + " | " + sequence + " | " +oe
+    
 }
