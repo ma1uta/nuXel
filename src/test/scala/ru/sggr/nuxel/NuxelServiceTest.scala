@@ -49,9 +49,14 @@ class NuxelServiceTest extends FunSuite{
         extractBeans))
  }
 
- test("Complex file from customer with lots of unrelated data") {
+ test("Complex file from customer with lots of unrelated data and joined cells") {
    assert(NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("customer_sample.xlsx")).extractBeans.size == 2)
  }
+
+test("One more complex file from customer") {
+   assert(NuxelService.getInstance(getClass.getClassLoader.getResourceAsStream("one-more-order.xls")).extractBeans.size == 1)
+ }
+
 
 
 }

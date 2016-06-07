@@ -2,7 +2,7 @@ name := "nuXel"
 
 organization := "ru.sggr"
 
-version := "1.4"
+version := "1.4.2"
 
 scalaVersion := "2.11.5"
 

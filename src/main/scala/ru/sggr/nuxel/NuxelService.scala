@@ -89,7 +89,6 @@ abstract class NuxelService private {
            && cellContent(colNum+1,rowNum).contains("Название")
          && cellContent(colNum+2,rowNum).contains("последовательность")
       && cellContent(colNum+3,rowNum).contains("шагов")
-       //&& cellContent(colNum+4,rowNum).contains("ОЕ")
        )
        } yield (colNum,rowNum)).head
 
