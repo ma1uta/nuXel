@@ -77,7 +77,7 @@ abstract class NuxelService private {
          }).tupled(transformToPhys(x,n))
        }
 
-       val offset = (for {
+       val colrow = (for {
          rowNum <- 0 until sheet.getLastRowNum
          colNum <- 0 until { 
            if (sheet.getRow(rowNum) != null) 
@@ -86,20 +86,22 @@ abstract class NuxelService private {
              0
          }
          if (cellContent(colNum,rowNum).contains("№")
-           && cellContent(colNum+1,rowNum).contains("Название")
-         && cellContent(colNum+2,rowNum).contains("последовательность")
-      && cellContent(colNum+3,rowNum).contains("шагов")
+           && cellContent(colNum+1,rowNum).contains("азвание")
+         && cellContent(colNum+2,rowNum).contains("оследовательность")
        )
-       } yield (colNum,rowNum)).head
-
-
-       (for {
-         row <- 0 until sheet.getPhysicalNumberOfRows 
-         } yield new Bean {
-           override val name: String = cellContent(Columns.Name.id, row, offset)
-           override val oe: String = cellContent(Columns.OE.id, row, offset)             
-           override val sequence: String = cellContent(Columns.Sequence.id, row, offset) 
-         }).tail.filter ( x => !x.name.isEmpty && !x.oe.isEmpty && !x.sequence.isEmpty)
+       } yield (colNum,rowNum))
+       if (!colrow.isEmpty){
+         val offset = colrow.head
+         (for {
+           row <- 0 until sheet.getPhysicalNumberOfRows 
+           } yield new Bean {
+             override val name: String = cellContent(Columns.Name.id, row, offset)
+             override val oe: String = cellContent(Columns.OE.id, row, offset)             
+             override val sequence: String = cellContent(Columns.Sequence.id, row, offset) 
+           }).tail.filter ( x => !x.name.isEmpty && !x.sequence.isEmpty)
+       } else {
+         scala.List.empty[Bean]
+       }
      }
 
      private object Columns extends Enumeration {
