@@ -43,6 +43,8 @@ abstract class NuxelService private {
 
          override def sequence = bean.sequence
 
+         override def num = bean.num
+
          override def errors = validator.validate(bean) :: bean.errors
        } else bean
      else
@@ -56,25 +58,26 @@ abstract class NuxelService private {
        def cellContent(x: Int, n: Int, offset: (Int,Int) = (0,0)) = {
          def transformToPhys(x: Int, y: Int) = {
            val result = sheet.getMergedRegions().filter(region =>  
-               region.getFirstRow < y && region.getFirstColumn< x &&
-               region.getLastRow >= y && region.getLastColumn >= x ) map { 
+               region.getFirstRow <= y && region.getFirstColumn< x &&
+               region.getLastRow >= y && region.getLastColumn >= x && 
+               (region.getFirstRow < y || region.getFirstColumn < x)) map { 
                  ( region : CellRangeAddress) => 
-                   (region.getLastColumn-x+region.getFirstColumn+1, region.getLastRow-y+region.getFirstRow+1)
+                   (region.getLastColumn + (x-region.getFirstColumn),region.getLastRow+( y-region.getFirstRow))
                }
                if (!result.isEmpty) result (0) else (x,y)
          }
 
          ((x : Int, n: Int) => {
-           if (sheet.getRow(n+offset._2)!=null && sheet.getRow(n+offset._2).getCell(x+offset._1) != null){
-             sheet.getRow(n+offset._2).getCell(x+offset._1).getCellType match {
-               case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n+offset._2).getCell(x+offset._1).getNumericCellValue().toString
-               case Cell.CELL_TYPE_STRING => sheet.getRow(n+offset._2).getCell(x+offset._1).getStringCellValue()
+           if (sheet.getRow(n)!=null && sheet.getRow(n).getCell(x) != null){
+             sheet.getRow(n).getCell(x).getCellType match {
+               case Cell.CELL_TYPE_NUMERIC => sheet.getRow(n).getCell(x).getNumericCellValue().toString
+               case Cell.CELL_TYPE_STRING => sheet.getRow(n).getCell(x).getStringCellValue()
                case _ => ""
              }
              } else {
                ""
              }
-         }).tupled(transformToPhys(x,n))
+         }).tupled(transformToPhys(x+offset._1,n+offset._2))
        }
 
        val colrow = (for {
@@ -92,13 +95,20 @@ abstract class NuxelService private {
        } yield (colNum,rowNum))
        if (!colrow.isEmpty){
          val offset = colrow.head
-         (for {
+         val result = (for {
            row <- 0 until sheet.getPhysicalNumberOfRows 
            } yield new Bean {
              override val name: String = cellContent(Columns.Name.id, row, offset)
              override val oe: String = cellContent(Columns.OE.id, row, offset)             
              override val sequence: String = cellContent(Columns.Sequence.id, row, offset) 
-           }).tail.filter ( x => !x.name.isEmpty && !x.sequence.isEmpty)
+             override val num: String = cellContent(Columns.Num.id, row, offset) 
+           }).tail
+         val idx = result.indexWhere(x => x.num.isEmpty || x.name.isEmpty);
+         if (idx > 0) {
+           result.splitAt(idx)._1
+         } else {
+           result
+         }
        } else {
          scala.List.empty[Bean]
        }

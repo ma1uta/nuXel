@@ -7,6 +7,7 @@ trait Bean {
   def name: String
   def sequence: String
   def oe: String
+  def num: String
   def errors : List[String] = List[String]()
   override def toString : String =  name + " | " + sequence + " | " +oe
     
